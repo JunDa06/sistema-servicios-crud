@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 function App() {
+  const [vista, setVista] = useState("home");
+
   const [servicios, setServicios] = useState([]);
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -13,7 +15,7 @@ function App() {
     fetch("http://localhost:3000/servicios")
       .then(res => res.json())
       .then(data => setServicios(data))
-      .catch(() => setMensaje("Error al conectar con el servidor"));
+      .catch(() => console.error("Error al conectar con el servidor"));
   };
 
   useEffect(() => {
@@ -26,9 +28,7 @@ function App() {
     try {
       const res = await fetch("http://localhost:3000/servicios", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombre, descripcion, precio })
       });
 
@@ -36,81 +36,128 @@ function App() {
 
       if (!res.ok) {
         setMensaje(data.mensaje);
+
+        setTimeout(() => {
+          setMensaje("");
+        }, 3000);
+
         return;
       }
 
       setMensaje("Servicio creado correctamente ✅");
+
+      setTimeout(() => {
+        setMensaje("");
+      }, 3000);
+
       obtenerServicios();
+
       setNombre("");
       setDescripcion("");
       setPrecio("");
 
     } catch {
       setMensaje("Servidor no disponible ❌");
+
+      setTimeout(() => {
+        setMensaje("");
+      }, 3000);
     }
   };
 
   return (
-    <div className="container">
-      <h1>Gestión de Servicios</h1>
+    <div>
+      {/* NAVBAR */}
+      <nav className="navbar">
+        <h2>TechSolutions</h2>
+        <div>
+          <button onClick={() => setVista("home")}>Inicio</button>
+          <button onClick={() => setVista("lista")}>Servicios</button>
+          <button onClick={() => setVista("crear")}>Registrar</button>
+        </div>
+      </nav>
 
-      {mensaje && <p className="mensaje">{mensaje}</p>}
+      <div className="container">
 
-      {/* BUSCADOR */}
-      <div className="card">
-        <input
-          type="text"
-          placeholder="Buscar servicio..."
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
-      </div>
-
-      {/* FORMULARIO */}
-      <div className="card">
-        <h2>Registrar Servicio</h2>
-        <form onSubmit={crearServicio}>
-          <input
-            type="text"
-            placeholder="Nombre"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Descripción"
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-          />
-          <input
-            type="number"
-            placeholder="Precio"
-            value={precio}
-            onChange={(e) => setPrecio(e.target.value)}
-          />
-          <button type="submit">Guardar</button>
-        </form>
-      </div>
-
-      {/* LISTA */}
-      <div className="card">
-        <h2>Lista de Servicios</h2>
-
-        {servicios.length === 0 ? (
-          <p>No hay servicios registrados</p>
-        ) : (
-          <ul>
-            {servicios
-              .filter(s =>
-                s.nombre.toLowerCase().includes(busqueda.toLowerCase())
-              )
-              .map(s => (
-                <li key={s.id}>
-                  <strong>{s.nombre}</strong> - {s.descripcion} - S/.{s.precio}
-                </li>
-              ))}
-          </ul>
+        {/* 🟣 PORTADA */}
+        {vista === "home" && (
+          <div className="hero">
+            <h1>Bienvenido a TechSolutions</h1>
+            <p>
+              Encuentra soluciones rápidas y profesionales para todos tus problemas tecnológicos.
+            </p>
+            <button onClick={() => setVista("lista")}>
+              Explorar Servicios
+            </button>
+          </div>
         )}
+
+        {/* 🟢 LISTA */}
+        {vista === "lista" && (
+          <>
+            <div className="card">
+              <input
+                type="text"
+                placeholder="Buscar servicio..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+            </div>
+
+            <div className="card">
+              <h2>Servicios Disponibles</h2>
+
+              {servicios.length === 0 ? (
+                <p>No hay servicios registrados</p>
+              ) : (
+                <ul>
+                  {servicios
+                    .filter(s =>
+                      s.nombre.toLowerCase().includes(busqueda.toLowerCase())
+                    )
+                    .map(s => (
+                      <li key={s.id}>
+                        <strong>{s.nombre}</strong> - {s.descripcion} - S/.{s.precio}
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* 🔵 CREAR */}
+        {vista === "crear" && (
+          <div className="card">
+            <h2>Registrar Servicio</h2>
+
+            {/* 🔥 MENSAJE SOLO AQUÍ */}
+            {mensaje && <p className="mensaje">{mensaje}</p>}
+
+            <form onSubmit={crearServicio}>
+              <input
+                type="text"
+                placeholder="Nombre"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Descripción"
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+              />
+              <input
+                type="number"
+                placeholder="Precio"
+                value={precio}
+                onChange={(e) => setPrecio(e.target.value)}
+              />
+              <button type="submit">Guardar</button>
+            </form>
+          </div>
+        )}
+
       </div>
     </div>
   );
