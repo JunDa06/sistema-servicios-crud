@@ -1,2 +1,6 @@
 ## Proyecto CRUD de Servicios
-Versión final combinada
+## 👥 Integrantes del Proyecto
+
+| Nombre        | GitHub |
+|---------------|--------|
+| Dayron Cavero | https://github.com/JunDa06 |
