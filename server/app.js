@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const sequelize = require("./database");
 
 const app = express();
 
@@ -21,8 +22,18 @@ app.use((req, res) => {
   res.status(404).json({ mensaje: "Ruta no encontrada" });
 });
 
-// 🔹 Servidor
+// 🔹 Puerto
 const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+
+// 🔥 CONEXIÓN A BD Y SERVIDOR
+sequelize.sync()
+  .then(() => {
+    console.log("Base de datos conectada 🟢");
+
+    app.listen(PORT, () => {
+      console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error("Error al conectar la base de datos ❌", error);
+  });
