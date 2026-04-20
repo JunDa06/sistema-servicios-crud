@@ -9,10 +9,24 @@ function App() {
   const [descripcion, setDescripcion] = useState("");
   const [precio, setPrecio] = useState("");
   const [busqueda, setBusqueda] = useState("");
-  const [mensaje, setMensaje] = useState("");
+
+  // 🔥 MENSAJES SEPARADOS
+  const [mensajeForm, setMensajeForm] = useState("");
+  const [mensajeLogin, setMensajeLogin] = useState("");
 
   const [editando, setEditando] = useState(false);
   const [idEditar, setIdEditar] = useState(null);
+
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  // 🔄 CAMBIAR VISTA LIMPIANDO MENSAJES
+  const cambiarVista = (v) => {
+    setVista(v);
+    setMensajeForm("");
+    setMensajeLogin("");
+  };
 
   const obtenerServicios = () => {
     fetch("http://localhost:3000/servicios")
@@ -24,73 +38,103 @@ function App() {
     obtenerServicios();
   }, []);
 
-  const crearServicio = async (e) => {
+  // 🔐 LOGIN
+  const login = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:3000/servicios", {
+      const res = await fetch("http://localhost:3000/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, descripcion, precio })
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setMensaje(data.mensaje);
-        setTimeout(() => setMensaje(""), 3000);
+        setMensajeLogin(data.mensaje);
         return;
       }
 
-      setMensaje("Servicio creado correctamente ✅");
-      setTimeout(() => setMensaje(""), 3000);
+      localStorage.setItem("token", data.token);
+      setToken(data.token);
 
-      obtenerServicios();
-      limpiarFormulario();
+      setUsername("");
+      setPassword("");
+      setMensajeLogin("");
+
+      cambiarVista("lista");
 
     } catch {
-      setMensaje("Error ❌");
+      setMensajeLogin("Error al conectar ❌");
     }
   };
 
-  // ✏️ EDITAR
-  const cargarEdicion = (servicio) => {
-    setVista("crear");
-    setEditando(true);
-    setIdEditar(servicio.id);
+  const logout = () => {
+    localStorage.removeItem("token");
+    setToken("");
+    cambiarVista("home");
+  };
 
-    setNombre(servicio.nombre);
-    setDescripcion(servicio.descripcion);
-    setPrecio(servicio.precio);
+  // 🔹 CREAR
+  const crearServicio = async (e) => {
+    e.preventDefault();
+
+    const res = await fetch("http://localhost:3000/servicios", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ nombre, descripcion, precio })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setMensajeForm(data.mensaje);
+      return;
+    }
+
+    setMensajeForm("Servicio creado ✅");
+    obtenerServicios();
+    limpiarFormulario();
+  };
+
+  // ✏️ EDITAR
+  const cargarEdicion = (s) => {
+    cambiarVista("crear");
+    setEditando(true);
+    setIdEditar(s.id);
+    setNombre(s.nombre);
+    setDescripcion(s.descripcion);
+    setPrecio(s.precio);
   };
 
   const actualizarServicio = async (e) => {
     e.preventDefault();
 
-    try {
-      const res = await fetch(`http://localhost:3000/servicios/${idEditar}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, descripcion, precio })
-      });
+    const res = await fetch(`http://localhost:3000/servicios/${idEditar}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ nombre, descripcion, precio })
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) {
-        setMensaje(data.mensaje);
-        setTimeout(() => setMensaje(""), 3000);
-        return;
-      }
-
-      setMensaje("Servicio actualizado ✏️");
-      setTimeout(() => setMensaje(""), 3000);
-
-      obtenerServicios();
-      limpiarFormulario();
-
-    } catch {
-      setMensaje("Error ❌");
+    if (!res.ok) {
+      setMensajeForm(data.mensaje);
+      return;
     }
+
+    setMensajeForm("Actualizado ✏️");
+    obtenerServicios();
+    limpiarFormulario();
   };
 
   // ❌ ELIMINAR
@@ -98,7 +142,8 @@ function App() {
     if (!window.confirm("¿Eliminar servicio?")) return;
 
     await fetch(`http://localhost:3000/servicios/${id}`, {
-      method: "DELETE"
+      method: "DELETE",
+      headers: { Authorization: "Bearer " + token }
     });
 
     obtenerServicios();
@@ -109,17 +154,27 @@ function App() {
     setDescripcion("");
     setPrecio("");
     setEditando(false);
-    setIdEditar(null);
   };
 
   return (
     <div>
+      {/* NAVBAR */}
       <nav className="navbar">
         <h2>TechSolutions</h2>
+
         <div>
-          <button onClick={() => setVista("home")}>Inicio</button>
-          <button onClick={() => setVista("lista")}>Servicios</button>
-          <button onClick={() => setVista("crear")}>Registrar</button>
+          <button onClick={() => cambiarVista("home")}>Inicio</button>
+          <button onClick={() => cambiarVista("lista")}>Servicios</button>
+
+          {token && (
+            <button onClick={() => cambiarVista("crear")}>Registrar</button>
+          )}
+
+          {!token ? (
+            <button onClick={() => cambiarVista("login")}>Login</button>
+          ) : (
+            <button onClick={logout}>Logout</button>
+          )}
         </div>
       </nav>
 
@@ -130,9 +185,33 @@ function App() {
           <div className="hero">
             <h1>Bienvenido a TechSolutions</h1>
             <p>Soluciones tecnológicas profesionales</p>
-            <button onClick={() => setVista("lista")}>
-              Explorar Servicios
-            </button>
+          </div>
+        )}
+
+        {/* LOGIN */}
+        {vista === "login" && (
+          <div className="card">
+            <h2>Iniciar Sesión</h2>
+
+            {mensajeLogin && <p className="mensaje">{mensajeLogin}</p>}
+
+            <form onSubmit={login}>
+              <input
+                type="text"
+                placeholder="Usuario"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+
+              <input
+                type="password"
+                placeholder="Contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+
+              <button type="submit">Ingresar</button>
+            </form>
           </div>
         )}
 
@@ -155,63 +234,34 @@ function App() {
                 )
                 .map(s => (
                   <div key={s.id} className="servicio-card">
-
                     <h3>{s.nombre}</h3>
                     <p>{s.descripcion}</p>
                     <span className="precio">S/. {s.precio}</span>
 
-                    {/* 🔽 BOTONES ABAJO */}
-                    <div className="acciones">
-                      <button
-                        className="btn-editar"
-                        onClick={() => cargarEdicion(s)}
-                      >
-                        ✏️
-                      </button>
-
-                      <button
-                        className="btn-eliminar"
-                        onClick={() => eliminarServicio(s.id)}
-                      >
-                        ✖
-                      </button>
-                    </div>
-
+                    {token && (
+                      <div className="acciones">
+                        <button onClick={() => cargarEdicion(s)}>✏️</button>
+                        <button onClick={() => eliminarServicio(s.id)}>❌</button>
+                      </div>
+                    )}
                   </div>
                 ))}
             </div>
           </>
         )}
 
-        {/* CREAR / EDITAR */}
-        {vista === "crear" && (
+        {/* FORM */}
+        {vista === "crear" && token && (
           <div className="card">
-            <h2>{editando ? "Editar Servicio" : "Registrar Servicio"}</h2>
+            <h2>{editando ? "Editar" : "Registrar"} Servicio</h2>
 
-            {mensaje && <p className="mensaje">{mensaje}</p>}
+            {mensajeForm && <p className="mensaje">{mensajeForm}</p>}
 
             <form onSubmit={editando ? actualizarServicio : crearServicio}>
-              <input
-                type="text"
-                placeholder="Nombre"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Descripción"
-                value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
-              />
-              <input
-                type="number"
-                placeholder="Precio"
-                value={precio}
-                onChange={(e) => setPrecio(e.target.value)}
-              />
-              <button type="submit">
-                {editando ? "Actualizar" : "Guardar"}
-              </button>
+              <input value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Nombre" />
+              <input value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Descripción" />
+              <input value={precio} onChange={e => setPrecio(e.target.value)} placeholder="Precio" />
+              <button type="submit">{editando ? "Actualizar" : "Guardar"}</button>
             </form>
           </div>
         )}
