@@ -11,11 +11,13 @@ function App() {
   const [busqueda, setBusqueda] = useState("");
   const [mensaje, setMensaje] = useState("");
 
+  const [editando, setEditando] = useState(false);
+  const [idEditar, setIdEditar] = useState(null);
+
   const obtenerServicios = () => {
     fetch("http://localhost:3000/servicios")
       .then(res => res.json())
-      .then(data => setServicios(data))
-      .catch(() => console.error("Error"));
+      .then(data => setServicios(data));
   };
 
   useEffect(() => {
@@ -44,32 +46,70 @@ function App() {
       setTimeout(() => setMensaje(""), 3000);
 
       obtenerServicios();
-
-      setNombre("");
-      setDescripcion("");
-      setPrecio("");
+      limpiarFormulario();
 
     } catch {
-      setMensaje("Servidor no disponible ❌");
-      setTimeout(() => setMensaje(""), 3000);
+      setMensaje("Error ❌");
     }
   };
 
-  // 🔴 ELIMINAR SERVICIO
-  const eliminarServicio = async (id) => {
-    const confirmar = window.confirm("¿Estás seguro de eliminar este servicio?");
+  // ✏️ EDITAR
+  const cargarEdicion = (servicio) => {
+    setVista("crear");
+    setEditando(true);
+    setIdEditar(servicio.id);
 
-    if (!confirmar) return;
+    setNombre(servicio.nombre);
+    setDescripcion(servicio.descripcion);
+    setPrecio(servicio.precio);
+  };
+
+  const actualizarServicio = async (e) => {
+    e.preventDefault();
 
     try {
-      await fetch(`http://localhost:3000/servicios/${id}`, {
-        method: "DELETE"
+      const res = await fetch(`http://localhost:3000/servicios/${idEditar}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, descripcion, precio })
       });
 
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMensaje(data.mensaje);
+        setTimeout(() => setMensaje(""), 3000);
+        return;
+      }
+
+      setMensaje("Servicio actualizado ✏️");
+      setTimeout(() => setMensaje(""), 3000);
+
       obtenerServicios();
+      limpiarFormulario();
+
     } catch {
-      alert("Error al eliminar ❌");
+      setMensaje("Error ❌");
     }
+  };
+
+  // ❌ ELIMINAR
+  const eliminarServicio = async (id) => {
+    if (!window.confirm("¿Eliminar servicio?")) return;
+
+    await fetch(`http://localhost:3000/servicios/${id}`, {
+      method: "DELETE"
+    });
+
+    obtenerServicios();
+  };
+
+  const limpiarFormulario = () => {
+    setNombre("");
+    setDescripcion("");
+    setPrecio("");
+    setEditando(false);
+    setIdEditar(null);
   };
 
   return (
@@ -85,11 +125,11 @@ function App() {
 
       <div className="container">
 
-        {/* PORTADA */}
+        {/* HOME */}
         {vista === "home" && (
           <div className="hero">
             <h1>Bienvenido a TechSolutions</h1>
-            <p>Soluciones tecnológicas rápidas y profesionales</p>
+            <p>Soluciones tecnológicas profesionales</p>
             <button onClick={() => setVista("lista")}>
               Explorar Servicios
             </button>
@@ -116,12 +156,19 @@ function App() {
                 .map(s => (
                   <div key={s.id} className="servicio-card">
 
-                    {/* ❌ BOTÓN ELIMINAR */}
+                    {/* BOTONES */}
                     <button
                       className="btn-eliminar"
                       onClick={() => eliminarServicio(s.id)}
                     >
                       ✖
+                    </button>
+
+                    <button
+                      className="btn-editar"
+                      onClick={() => cargarEdicion(s)}
+                    >
+                      ✏️
                     </button>
 
                     <h3>{s.nombre}</h3>
@@ -133,14 +180,14 @@ function App() {
           </>
         )}
 
-        {/* CREAR */}
+        {/* CREAR / EDITAR */}
         {vista === "crear" && (
           <div className="card">
-            <h2>Registrar Servicio</h2>
+            <h2>{editando ? "Editar Servicio" : "Registrar Servicio"}</h2>
 
             {mensaje && <p className="mensaje">{mensaje}</p>}
 
-            <form onSubmit={crearServicio}>
+            <form onSubmit={editando ? actualizarServicio : crearServicio}>
               <input
                 type="text"
                 placeholder="Nombre"
@@ -159,7 +206,9 @@ function App() {
                 value={precio}
                 onChange={(e) => setPrecio(e.target.value)}
               />
-              <button type="submit">Guardar</button>
+              <button type="submit">
+                {editando ? "Actualizar" : "Guardar"}
+              </button>
             </form>
           </div>
         )}
