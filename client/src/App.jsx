@@ -15,7 +15,7 @@ function App() {
     fetch("http://localhost:3000/servicios")
       .then(res => res.json())
       .then(data => setServicios(data))
-      .catch(() => console.error("Error al conectar con el servidor"));
+      .catch(() => console.error("Error"));
   };
 
   useEffect(() => {
@@ -36,19 +36,12 @@ function App() {
 
       if (!res.ok) {
         setMensaje(data.mensaje);
-
-        setTimeout(() => {
-          setMensaje("");
-        }, 3000);
-
+        setTimeout(() => setMensaje(""), 3000);
         return;
       }
 
       setMensaje("Servicio creado correctamente ✅");
-
-      setTimeout(() => {
-        setMensaje("");
-      }, 3000);
+      setTimeout(() => setMensaje(""), 3000);
 
       obtenerServicios();
 
@@ -58,16 +51,29 @@ function App() {
 
     } catch {
       setMensaje("Servidor no disponible ❌");
+      setTimeout(() => setMensaje(""), 3000);
+    }
+  };
 
-      setTimeout(() => {
-        setMensaje("");
-      }, 3000);
+  // 🔴 ELIMINAR SERVICIO
+  const eliminarServicio = async (id) => {
+    const confirmar = window.confirm("¿Estás seguro de eliminar este servicio?");
+
+    if (!confirmar) return;
+
+    try {
+      await fetch(`http://localhost:3000/servicios/${id}`, {
+        method: "DELETE"
+      });
+
+      obtenerServicios();
+    } catch {
+      alert("Error al eliminar ❌");
     }
   };
 
   return (
     <div>
-      {/* NAVBAR */}
       <nav className="navbar">
         <h2>TechSolutions</h2>
         <div>
@@ -79,20 +85,18 @@ function App() {
 
       <div className="container">
 
-        {/* 🟣 PORTADA */}
+        {/* PORTADA */}
         {vista === "home" && (
           <div className="hero">
             <h1>Bienvenido a TechSolutions</h1>
-            <p>
-              Encuentra soluciones rápidas y profesionales para todos tus problemas tecnológicos.
-            </p>
+            <p>Soluciones tecnológicas rápidas y profesionales</p>
             <button onClick={() => setVista("lista")}>
               Explorar Servicios
             </button>
           </div>
         )}
 
-        {/* 🟢 LISTA */}
+        {/* LISTA */}
         {vista === "lista" && (
           <>
             <div className="card">
@@ -104,34 +108,36 @@ function App() {
               />
             </div>
 
-            <div className="card">
-              <h2>Servicios Disponibles</h2>
+            <div className="grid-servicios">
+              {servicios
+                .filter(s =>
+                  s.nombre.toLowerCase().includes(busqueda.toLowerCase())
+                )
+                .map(s => (
+                  <div key={s.id} className="servicio-card">
 
-              {servicios.length === 0 ? (
-                <p>No hay servicios registrados</p>
-              ) : (
-                <ul>
-                  {servicios
-                    .filter(s =>
-                      s.nombre.toLowerCase().includes(busqueda.toLowerCase())
-                    )
-                    .map(s => (
-                      <li key={s.id}>
-                        <strong>{s.nombre}</strong> - {s.descripcion} - S/.{s.precio}
-                      </li>
-                    ))}
-                </ul>
-              )}
+                    {/* ❌ BOTÓN ELIMINAR */}
+                    <button
+                      className="btn-eliminar"
+                      onClick={() => eliminarServicio(s.id)}
+                    >
+                      ✖
+                    </button>
+
+                    <h3>{s.nombre}</h3>
+                    <p>{s.descripcion}</p>
+                    <span className="precio">S/. {s.precio}</span>
+                  </div>
+                ))}
             </div>
           </>
         )}
 
-        {/* 🔵 CREAR */}
+        {/* CREAR */}
         {vista === "crear" && (
           <div className="card">
             <h2>Registrar Servicio</h2>
 
-            {/* 🔥 MENSAJE SOLO AQUÍ */}
             {mensaje && <p className="mensaje">{mensaje}</p>}
 
             <form onSubmit={crearServicio}>

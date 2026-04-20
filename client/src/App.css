@@ -1,9 +1,7 @@
-/* RESET */
 * {
   box-sizing: border-box;
 }
 
-/* BODY */
 body {
   margin: 0;
   font-family: "Segoe UI", sans-serif;
@@ -20,17 +18,11 @@ body {
   align-items: center;
 }
 
-.navbar h2 {
-  margin: 0;
-}
-
-/* CONTENEDOR BOTONES NAV */
 .navbar div {
   display: flex;
   gap: 10px;
 }
 
-/* BOTONES NAV */
 .navbar button {
   background: #3b82f6;
   border: none;
@@ -38,8 +30,6 @@ body {
   color: white;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 500;
-  width: auto; /* 🔥 evita que se estiren */
 }
 
 .navbar button:hover {
@@ -48,14 +38,42 @@ body {
 
 /* CONTENIDO */
 .container {
-  max-width: 600px;
+  max-width: 800px;
   margin: 40px auto;
   padding: 20px;
 }
 
 h1 {
   text-align: center;
-  color: #1e293b;
+}
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.hero h1 {
+  font-size: 32px;
+}
+
+.hero p {
+  margin-top: 10px;
+  color: #555;
+}
+
+.hero button {
+  margin-top: 20px;
+  padding: 12px 20px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.hero button:hover {
+  background: #2563eb;
 }
 
 /* CARD */
@@ -64,84 +82,94 @@ h1 {
   padding: 20px;
   margin-top: 20px;
   border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* INPUTS */
+/* INPUT */
 input {
   width: 100%;
-  margin-bottom: 12px;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  background: #f9fafb;
-  color: #333;
-  font-size: 14px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
-/* BOTÓN FORM */
+/* BOTÓN */
 .card button {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   background: #22c55e;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: bold;
 }
 
 .card button:hover {
   background: #16a34a;
 }
 
-/* LISTA */
-li {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-  border-radius: 6px;
+/* GRID */
+.grid-servicios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
 }
 
-li:hover {
-  background: #f1f5f9;
+/* CARD SERVICIO */
+.servicio-card {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: 0.2s;
 }
 
-/* MENSAJES */
-.mensaje {
-  text-align: center;
-  color: #ef4444;
-  font-weight: bold;
-  margin-top: 10px;
+.servicio-card:hover {
+  transform: translateY(-5px);
 }
 
-/* HERO (PORTADA) */
-.hero {
-  text-align: center;
-  padding: 60px 20px;
+.servicio-card h3 {
+  margin: 0;
 }
 
-.hero h1 {
-  font-size: 36px;
-  color: #1e293b;
-}
-
-.hero p {
-  margin-top: 10px;
-  font-size: 18px;
+.servicio-card p {
+  margin: 10px 0;
   color: #555;
 }
 
-.hero button {
-  margin-top: 20px;
-  padding: 12px 20px;
-  background: #3b82f6;
-  border: none;
-  color: white;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
+.precio {
+  font-weight: bold;
+  color: #22c55e;
 }
 
-.hero button:hover {
-  background: #2563eb;
+/* MENSAJE */
+.mensaje {
+  text-align: center;
+  color: red;
+  font-weight: bold;
+}
+
+/* BOTÓN ELIMINAR */
+.servicio-card {
+  position: relative;
+}
+
+.btn-eliminar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ef4444;
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-eliminar:hover {
+  background: #dc2626;
 }
