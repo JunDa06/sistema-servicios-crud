@@ -1,16 +1,25 @@
 const express = require("express");
 const router = express.Router();
-const Servicio = require("../models/servicio.model");
 
-// 🔹 CREAR servicio
-router.post("/", async (req, res) => {
+const Servicio = require("../models/servicio.model");
+const verificarToken = require("../middlewares/auth");
+
+// 🔹 CREAR servicio (PROTEGIDO)
+router.post("/", verificarToken, async (req, res) => {
   try {
     const { nombre, descripcion, precio } = req.body;
 
+    // Validar campos
     if (!nombre || !descripcion || !precio) {
       return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
     }
 
+    // Validar precio numérico
+    if (isNaN(precio)) {
+      return res.status(400).json({ mensaje: "El precio debe ser un número" });
+    }
+
+    // Validar duplicado
     const existe = await Servicio.findOne({ where: { nombre } });
 
     if (existe) {
@@ -20,27 +29,29 @@ router.post("/", async (req, res) => {
     const nuevoServicio = await Servicio.create({
       nombre,
       descripcion,
-      precio
+      precio: Number(precio)
     });
 
     res.status(201).json(nuevoServicio);
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({ mensaje: "Error al crear servicio" });
   }
 });
 
-// 🔹 OBTENER todos
+// 🔹 OBTENER todos (PÚBLICO)
 router.get("/", async (req, res) => {
   try {
     const servicios = await Servicio.findAll();
     res.json(servicios);
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ mensaje: "Error al obtener servicios" });
   }
 });
 
-// 🔹 OBTENER por ID
+// 🔹 OBTENER por ID (PÚBLICO)
 router.get("/:id", async (req, res) => {
   try {
     const servicio = await Servicio.findByPk(req.params.id);
@@ -50,13 +61,15 @@ router.get("/:id", async (req, res) => {
     }
 
     res.json(servicio);
-  } catch {
+
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ mensaje: "Error al obtener servicio" });
   }
 });
 
-// 🔹 ACTUALIZAR
-router.put("/:id", async (req, res) => {
+// 🔹 ACTUALIZAR (PROTEGIDO)
+router.put("/:id", verificarToken, async (req, res) => {
   try {
     const { nombre, descripcion, precio } = req.body;
 
@@ -66,9 +79,16 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ mensaje: "Servicio no encontrado" });
     }
 
-    const duplicado = await Servicio.findOne({
-      where: { nombre }
-    });
+    if (!nombre || !descripcion || !precio) {
+      return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
+    }
+
+    if (isNaN(precio)) {
+      return res.status(400).json({ mensaje: "El precio debe ser un número" });
+    }
+
+    // Validar duplicado
+    const duplicado = await Servicio.findOne({ where: { nombre } });
 
     if (duplicado && duplicado.id !== servicio.id) {
       return res.status(400).json({
@@ -79,18 +99,19 @@ router.put("/:id", async (req, res) => {
     await servicio.update({
       nombre,
       descripcion,
-      precio
+      precio: Number(precio)
     });
 
     res.json(servicio);
 
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ mensaje: "Error al actualizar servicio" });
   }
 });
 
-// 🔹 ELIMINAR
-router.delete("/:id", async (req, res) => {
+// 🔹 ELIMINAR (PROTEGIDO)
+router.delete("/:id", verificarToken, async (req, res) => {
   try {
     const servicio = await Servicio.findByPk(req.params.id);
 
@@ -102,7 +123,8 @@ router.delete("/:id", async (req, res) => {
 
     res.json({ mensaje: "Servicio eliminado correctamente" });
 
-  } catch {
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ mensaje: "Error al eliminar servicio" });
   }
 });

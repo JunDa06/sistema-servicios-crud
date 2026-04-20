@@ -15,7 +15,10 @@ app.get("/", (req, res) => {
 
 // 🔹 Rutas
 const serviciosRoutes = require("./routes/servicios.routes");
+const authRoutes = require("./routes/auth.routes");
+
 app.use("/servicios", serviciosRoutes);
+app.use("/auth", authRoutes);
 
 // 🔹 Manejo de rutas no encontradas
 app.use((req, res) => {
@@ -25,7 +28,7 @@ app.use((req, res) => {
 // 🔹 Puerto
 const PORT = 3000;
 
-// 🔥 CONEXIÓN A BD Y SERVIDOR
+// 🔥 Conectar BD y levantar servidor
 sequelize.sync()
   .then(() => {
     console.log("Base de datos conectada 🟢");
