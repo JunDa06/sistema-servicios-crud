@@ -1,111 +1,110 @@
 const express = require("express");
 const router = express.Router();
-
-// 🔹 Simulación de base de datos
-let servicios = [];
-let contadorId = 1;
+const Servicio = require("../models/servicio.model");
 
 // 🔹 CREAR servicio
-router.post("/", (req, res) => {
-  const { nombre, descripcion, precio } = req.body;
+router.post("/", async (req, res) => {
+  try {
+    const { nombre, descripcion, precio } = req.body;
 
-  // Validar campos
-  if (!nombre || !descripcion || !precio) {
-    return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
-  }
+    if (!nombre || !descripcion || !precio) {
+      return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
+    }
 
-  // Validar precio numérico
-  if (isNaN(precio)) {
-    return res.status(400).json({ mensaje: "El precio debe ser un número" });
-  }
+    const existe = await Servicio.findOne({ where: { nombre } });
 
-  // Validar duplicados
-  const existe = servicios.find(s => s.nombre === nombre);
-  if (existe) {
-    return res.status(400).json({ mensaje: "El servicio ya existe" });
-  }
+    if (existe) {
+      return res.status(400).json({ mensaje: "El servicio ya existe" });
+    }
 
-  const nuevoServicio = {
-    id: contadorId++, // 🔥 evita duplicados
-    nombre,
-    descripcion,
-    precio: Number(precio)
-  };
-
-  servicios.push(nuevoServicio);
-  res.status(201).json(nuevoServicio);
-});
-
-// 🔹 OBTENER todos los servicios
-router.get("/", (req, res) => {
-  res.json(servicios);
-});
-
-// 🔹 OBTENER servicio por ID
-router.get("/:id", (req, res) => {
-  const { id } = req.params;
-
-  const servicio = servicios.find(s => s.id == id);
-
-  if (!servicio) {
-    return res.status(404).json({ mensaje: "Servicio no encontrado" });
-  }
-
-  res.json(servicio);
-});
-
-// 🔹 ACTUALIZAR servicio
-router.put("/:id", (req, res) => {
-  const { id } = req.params;
-  const { nombre, descripcion, precio } = req.body;
-
-  const servicio = servicios.find(s => s.id == id);
-
-  if (!servicio) {
-    return res.status(404).json({ mensaje: "Servicio no encontrado" });
-  }
-
-  // Validar campos
-  if (!nombre || !descripcion || !precio) {
-    return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
-  }
-
-  // Validar precio
-  if (isNaN(precio)) {
-    return res.status(400).json({ mensaje: "El precio debe ser un número" });
-  }
-
-  // Validar duplicados
-  const duplicado = servicios.find(
-    s => s.nombre === nombre && s.id != id
-  );
-
-  if (duplicado) {
-    return res.status(400).json({
-      mensaje: "Ya existe otro servicio con ese nombre"
+    const nuevoServicio = await Servicio.create({
+      nombre,
+      descripcion,
+      precio
     });
+
+    res.status(201).json(nuevoServicio);
+
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al crear servicio" });
   }
-
-  servicio.nombre = nombre;
-  servicio.descripcion = descripcion;
-  servicio.precio = Number(precio);
-
-  res.json(servicio);
 });
 
-// 🔹 ELIMINAR servicio
-router.delete("/:id", (req, res) => {
-  const { id } = req.params;
-
-  const index = servicios.findIndex(s => s.id == id);
-
-  if (index === -1) {
-    return res.status(404).json({ mensaje: "Servicio no encontrado" });
+// 🔹 OBTENER todos
+router.get("/", async (req, res) => {
+  try {
+    const servicios = await Servicio.findAll();
+    res.json(servicios);
+  } catch {
+    res.status(500).json({ mensaje: "Error al obtener servicios" });
   }
+});
 
-  servicios.splice(index, 1);
+// 🔹 OBTENER por ID
+router.get("/:id", async (req, res) => {
+  try {
+    const servicio = await Servicio.findByPk(req.params.id);
 
-  res.json({ mensaje: "Servicio eliminado correctamente" });
+    if (!servicio) {
+      return res.status(404).json({ mensaje: "Servicio no encontrado" });
+    }
+
+    res.json(servicio);
+  } catch {
+    res.status(500).json({ mensaje: "Error al obtener servicio" });
+  }
+});
+
+// 🔹 ACTUALIZAR
+router.put("/:id", async (req, res) => {
+  try {
+    const { nombre, descripcion, precio } = req.body;
+
+    const servicio = await Servicio.findByPk(req.params.id);
+
+    if (!servicio) {
+      return res.status(404).json({ mensaje: "Servicio no encontrado" });
+    }
+
+    const duplicado = await Servicio.findOne({
+      where: { nombre }
+    });
+
+    if (duplicado && duplicado.id !== servicio.id) {
+      return res.status(400).json({
+        mensaje: "Ya existe otro servicio con ese nombre"
+      });
+    }
+
+    await servicio.update({
+      nombre,
+      descripcion,
+      precio
+    });
+
+    res.json(servicio);
+
+  } catch {
+    res.status(500).json({ mensaje: "Error al actualizar servicio" });
+  }
+});
+
+// 🔹 ELIMINAR
+router.delete("/:id", async (req, res) => {
+  try {
+    const servicio = await Servicio.findByPk(req.params.id);
+
+    if (!servicio) {
+      return res.status(404).json({ mensaje: "Servicio no encontrado" });
+    }
+
+    await servicio.destroy();
+
+    res.json({ mensaje: "Servicio eliminado correctamente" });
+
+  } catch {
+    res.status(500).json({ mensaje: "Error al eliminar servicio" });
+  }
 });
 
 module.exports = router;
