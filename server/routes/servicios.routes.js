@@ -3,6 +3,7 @@ const router = express.Router();
 
 // 🔹 Simulación de base de datos
 let servicios = [];
+let contadorId = 1;
 
 // 🔹 CREAR servicio
 router.post("/", (req, res) => {
@@ -13,6 +14,11 @@ router.post("/", (req, res) => {
     return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
   }
 
+  // Validar precio numérico
+  if (isNaN(precio)) {
+    return res.status(400).json({ mensaje: "El precio debe ser un número" });
+  }
+
   // Validar duplicados
   const existe = servicios.find(s => s.nombre === nombre);
   if (existe) {
@@ -20,10 +26,10 @@ router.post("/", (req, res) => {
   }
 
   const nuevoServicio = {
-    id: servicios.length + 1,
+    id: contadorId++, // 🔥 evita duplicados
     nombre,
     descripcion,
-    precio
+    precio: Number(precio)
   };
 
   servicios.push(nuevoServicio);
@@ -64,15 +70,25 @@ router.put("/:id", (req, res) => {
     return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
   }
 
+  // Validar precio
+  if (isNaN(precio)) {
+    return res.status(400).json({ mensaje: "El precio debe ser un número" });
+  }
+
   // Validar duplicados
-  const duplicado = servicios.find(s => s.nombre === nombre && s.id != id);
+  const duplicado = servicios.find(
+    s => s.nombre === nombre && s.id != id
+  );
+
   if (duplicado) {
-    return res.status(400).json({ mensaje: "Ya existe otro servicio con ese nombre" });
+    return res.status(400).json({
+      mensaje: "Ya existe otro servicio con ese nombre"
+    });
   }
 
   servicio.nombre = nombre;
   servicio.descripcion = descripcion;
-  servicio.precio = precio;
+  servicio.precio = Number(precio);
 
   res.json(servicio);
 });

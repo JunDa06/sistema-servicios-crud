@@ -156,24 +156,27 @@ function App() {
                 .map(s => (
                   <div key={s.id} className="servicio-card">
 
-                    {/* BOTONES */}
-                    <button
-                      className="btn-eliminar"
-                      onClick={() => eliminarServicio(s.id)}
-                    >
-                      ✖
-                    </button>
-
-                    <button
-                      className="btn-editar"
-                      onClick={() => cargarEdicion(s)}
-                    >
-                      ✏️
-                    </button>
-
                     <h3>{s.nombre}</h3>
                     <p>{s.descripcion}</p>
                     <span className="precio">S/. {s.precio}</span>
+
+                    {/* 🔽 BOTONES ABAJO */}
+                    <div className="acciones">
+                      <button
+                        className="btn-editar"
+                        onClick={() => cargarEdicion(s)}
+                      >
+                        ✏️
+                      </button>
+
+                      <button
+                        className="btn-eliminar"
+                        onClick={() => eliminarServicio(s.id)}
+                      >
+                        ✖
+                      </button>
+                    </div>
+
                   </div>
                 ))}
             </div>
