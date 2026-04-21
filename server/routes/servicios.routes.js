@@ -2,15 +2,16 @@ const express = require("express");
 const router = express.Router();
 
 const Servicio = require("../models/servicio.model");
+const Categoria = require("../models/categoria.model"); // 🔥 para include
 const verificarToken = require("../middlewares/auth");
 
 // 🔹 CREAR servicio (PROTEGIDO)
 router.post("/", verificarToken, async (req, res) => {
   try {
-    const { nombre, descripcion, precio } = req.body;
+    const { nombre, descripcion, precio, categoriaId } = req.body;
 
     // Validar campos
-    if (!nombre || !descripcion || !precio) {
+    if (!nombre || !descripcion || !precio || !categoriaId) {
       return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
     }
 
@@ -21,7 +22,6 @@ router.post("/", verificarToken, async (req, res) => {
 
     // Validar duplicado
     const existe = await Servicio.findOne({ where: { nombre } });
-
     if (existe) {
       return res.status(400).json({ mensaje: "El servicio ya existe" });
     }
@@ -29,7 +29,8 @@ router.post("/", verificarToken, async (req, res) => {
     const nuevoServicio = await Servicio.create({
       nombre,
       descripcion,
-      precio: Number(precio)
+      precio: Number(precio),
+      categoriaId // 🔥 CLAVE
     });
 
     res.status(201).json(nuevoServicio);
@@ -40,10 +41,16 @@ router.post("/", verificarToken, async (req, res) => {
   }
 });
 
-// 🔹 OBTENER todos (PÚBLICO)
+// 🔹 OBTENER todos (PÚBLICO) + incluir categoría 🔥
 router.get("/", async (req, res) => {
   try {
-    const servicios = await Servicio.findAll();
+    const servicios = await Servicio.findAll({
+      include: {
+        model: Categoria,
+        attributes: ["id", "nombre"]
+      }
+    });
+
     res.json(servicios);
   } catch (error) {
     console.error(error);
@@ -54,7 +61,12 @@ router.get("/", async (req, res) => {
 // 🔹 OBTENER por ID (PÚBLICO)
 router.get("/:id", async (req, res) => {
   try {
-    const servicio = await Servicio.findByPk(req.params.id);
+    const servicio = await Servicio.findByPk(req.params.id, {
+      include: {
+        model: Categoria,
+        attributes: ["id", "nombre"]
+      }
+    });
 
     if (!servicio) {
       return res.status(404).json({ mensaje: "Servicio no encontrado" });
@@ -71,7 +83,7 @@ router.get("/:id", async (req, res) => {
 // 🔹 ACTUALIZAR (PROTEGIDO)
 router.put("/:id", verificarToken, async (req, res) => {
   try {
-    const { nombre, descripcion, precio } = req.body;
+    const { nombre, descripcion, precio, categoriaId } = req.body;
 
     const servicio = await Servicio.findByPk(req.params.id);
 
@@ -79,7 +91,7 @@ router.put("/:id", verificarToken, async (req, res) => {
       return res.status(404).json({ mensaje: "Servicio no encontrado" });
     }
 
-    if (!nombre || !descripcion || !precio) {
+    if (!nombre || !descripcion || !precio || !categoriaId) {
       return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
     }
 
@@ -99,7 +111,8 @@ router.put("/:id", verificarToken, async (req, res) => {
     await servicio.update({
       nombre,
       descripcion,
-      precio: Number(precio)
+      precio: Number(precio),
+      categoriaId // 🔥 CLAVE
     });
 
     res.json(servicio);
