@@ -137,3 +137,14 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Variables de entorno (proyecto)
+server/.env
+
+# Ignorar SQLite
+*.sqlite
+*.sqlite3
+
+#no ignorar template
+!.env.template
+!server/.env.template
