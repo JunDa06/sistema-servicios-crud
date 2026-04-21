@@ -1,16 +1,23 @@
+require("dotenv").config(); 
+
 const { Sequelize } = require("sequelize");
-require("dotenv").config();
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME,       // railway
-  process.env.DB_USER,       // root
-  process.env.DB_PASSWORD,   // password
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
   {
-    host: process.env.DB_HOST, // mysql.railway.internal
-    port: process.env.DB_PORT, // 3306
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
     dialect: "mysql",
     logging: false
   }
 );
 
 module.exports = sequelize;
+
+console.log("HOST:", process.env.DB_HOST);
+console.log("USER:", process.env.DB_USER);
+console.log("PASS:", process.env.DB_PASSWORD);
+console.log("DB:", process.env.DB_NAME);
+console.log("PORT:", process.env.DB_PORT);
