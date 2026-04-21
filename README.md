@@ -166,7 +166,7 @@ sistema-servicios-crud/
 
 ## 🎥 Demo
 
-*(Aquí puedes agregar el enlace a tu video de demostración si lo tienes)*
+
 
 ---
 
