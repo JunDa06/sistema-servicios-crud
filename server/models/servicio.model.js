@@ -18,6 +18,9 @@ const Servicio = sequelize.define("Servicio", {
     type: DataTypes.FLOAT,
     allowNull: false
   }
+}, {
+  paranoid: true,   // 🔥 SOFT DELETE
+  timestamps: true  // (opcional, pero recomendable)
 });
 
 // 🔹 RELACIONES

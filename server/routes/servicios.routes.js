@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const Servicio = require("../models/servicio.model");
-const Categoria = require("../models/categoria.model"); // 🔥 para include
+const Categoria = require("../models/categoria.model");
 const verificarToken = require("../middlewares/auth");
 
 // 🔹 CREAR servicio (PROTEGIDO)
@@ -10,27 +10,33 @@ router.post("/", verificarToken, async (req, res) => {
   try {
     const { nombre, descripcion, precio, categoriaId } = req.body;
 
+    // 🔥 normalizar nombre
+    const nombreLower = nombre?.toLowerCase().trim();
+
     // Validar campos
-    if (!nombre || !descripcion || !precio || !categoriaId) {
+    if (!nombreLower || !descripcion || !precio || !categoriaId) {
       return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
     }
 
-    // Validar precio numérico
+    // Validar precio
     if (isNaN(precio)) {
       return res.status(400).json({ mensaje: "El precio debe ser un número" });
     }
 
-    // Validar duplicado
-    const existe = await Servicio.findOne({ where: { nombre } });
+    // 🔥 Validar duplicado (case-insensitive)
+    const existe = await Servicio.findOne({
+      where: { nombre: nombreLower }
+    });
+
     if (existe) {
       return res.status(400).json({ mensaje: "El servicio ya existe" });
     }
 
     const nuevoServicio = await Servicio.create({
-      nombre,
+      nombre: nombreLower,
       descripcion,
       precio: Number(precio),
-      categoriaId // 🔥 CLAVE
+      categoriaId
     });
 
     res.status(201).json(nuevoServicio);
@@ -41,7 +47,7 @@ router.post("/", verificarToken, async (req, res) => {
   }
 });
 
-// 🔹 OBTENER todos (PÚBLICO) + incluir categoría 🔥
+// 🔹 OBTENER todos (PÚBLICO)
 router.get("/", async (req, res) => {
   try {
     const servicios = await Servicio.findAll({
@@ -58,7 +64,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// 🔹 OBTENER por ID (PÚBLICO)
+// 🔹 OBTENER por ID
 router.get("/:id", async (req, res) => {
   try {
     const servicio = await Servicio.findByPk(req.params.id, {
@@ -80,7 +86,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// 🔹 ACTUALIZAR (PROTEGIDO)
+// 🔹 ACTUALIZAR
 router.put("/:id", verificarToken, async (req, res) => {
   try {
     const { nombre, descripcion, precio, categoriaId } = req.body;
@@ -91,7 +97,9 @@ router.put("/:id", verificarToken, async (req, res) => {
       return res.status(404).json({ mensaje: "Servicio no encontrado" });
     }
 
-    if (!nombre || !descripcion || !precio || !categoriaId) {
+    const nombreLower = nombre?.toLowerCase().trim();
+
+    if (!nombreLower || !descripcion || !precio || !categoriaId) {
       return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
     }
 
@@ -99,8 +107,10 @@ router.put("/:id", verificarToken, async (req, res) => {
       return res.status(400).json({ mensaje: "El precio debe ser un número" });
     }
 
-    // Validar duplicado
-    const duplicado = await Servicio.findOne({ where: { nombre } });
+    // 🔥 Validar duplicado
+    const duplicado = await Servicio.findOne({
+      where: { nombre: nombreLower }
+    });
 
     if (duplicado && duplicado.id !== servicio.id) {
       return res.status(400).json({
@@ -109,10 +119,10 @@ router.put("/:id", verificarToken, async (req, res) => {
     }
 
     await servicio.update({
-      nombre,
+      nombre: nombreLower,
       descripcion,
       precio: Number(precio),
-      categoriaId // 🔥 CLAVE
+      categoriaId
     });
 
     res.json(servicio);
@@ -123,7 +133,7 @@ router.put("/:id", verificarToken, async (req, res) => {
   }
 });
 
-// 🔹 ELIMINAR (PROTEGIDO)
+// 🔹 ELIMINAR
 router.delete("/:id", verificarToken, async (req, res) => {
   try {
     const servicio = await Servicio.findByPk(req.params.id);
