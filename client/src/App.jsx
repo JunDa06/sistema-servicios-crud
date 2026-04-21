@@ -5,14 +5,15 @@ function App() {
   const [vista, setVista] = useState("home");
 
   const [servicios, setServicios] = useState([]);
-  const [categorias, setCategorias] = useState([]); // 🔥 NUEVO
+  const [categorias, setCategorias] = useState([]);
 
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [precio, setPrecio] = useState("");
-  const [categoriaId, setCategoriaId] = useState(""); // 🔥 NUEVO
+  const [categoriaId, setCategoriaId] = useState("");
 
   const [busqueda, setBusqueda] = useState("");
+  const [filtroCategoria, setFiltroCategoria] = useState("");
 
   const [mensajeForm, setMensajeForm] = useState("");
   const [mensajeLogin, setMensajeLogin] = useState("");
@@ -30,14 +31,12 @@ function App() {
     setMensajeLogin("");
   };
 
-  // 🔹 SERVICIOS
   const obtenerServicios = () => {
     fetch("http://localhost:3000/servicios")
       .then(res => res.json())
       .then(data => setServicios(data));
   };
 
-  // 🔹 CATEGORÍAS
   const obtenerCategorias = () => {
     fetch("http://localhost:3000/categorias")
       .then(res => res.json())
@@ -46,19 +45,16 @@ function App() {
 
   useEffect(() => {
     obtenerServicios();
-    obtenerCategorias(); // 🔥 NUEVO
+    obtenerCategorias();
   }, []);
 
-  // 🔐 LOGIN
   const login = async (e) => {
     e.preventDefault();
 
     try {
       const res = await fetch("http://localhost:3000/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
       });
 
@@ -74,8 +70,6 @@ function App() {
 
       setUsername("");
       setPassword("");
-      setMensajeLogin("");
-
       cambiarVista("lista");
 
     } catch {
@@ -89,7 +83,6 @@ function App() {
     cambiarVista("home");
   };
 
-  // 🔹 CREAR
   const crearServicio = async (e) => {
     e.preventDefault();
 
@@ -99,7 +92,7 @@ function App() {
         "Content-Type": "application/json",
         Authorization: "Bearer " + token
       },
-      body: JSON.stringify({ nombre, descripcion, precio, categoriaId }) // 🔥
+      body: JSON.stringify({ nombre, descripcion, precio, categoriaId })
     });
 
     const data = await res.json();
@@ -114,7 +107,6 @@ function App() {
     limpiarFormulario();
   };
 
-  // ✏️ EDITAR
   const cargarEdicion = (s) => {
     cambiarVista("crear");
     setEditando(true);
@@ -122,7 +114,7 @@ function App() {
     setNombre(s.nombre);
     setDescripcion(s.descripcion);
     setPrecio(s.precio);
-    setCategoriaId(s.categoriaId || ""); // 🔥
+    setCategoriaId(s.categoriaId || "");
   };
 
   const actualizarServicio = async (e) => {
@@ -134,7 +126,7 @@ function App() {
         "Content-Type": "application/json",
         Authorization: "Bearer " + token
       },
-      body: JSON.stringify({ nombre, descripcion, precio, categoriaId }) // 🔥
+      body: JSON.stringify({ nombre, descripcion, precio, categoriaId })
     });
 
     const data = await res.json();
@@ -149,7 +141,6 @@ function App() {
     limpiarFormulario();
   };
 
-  // ❌ ELIMINAR
   const eliminarServicio = async (id) => {
     if (!window.confirm("¿Eliminar servicio?")) return;
 
@@ -165,13 +156,12 @@ function App() {
     setNombre("");
     setDescripcion("");
     setPrecio("");
-    setCategoriaId(""); // 🔥
+    setCategoriaId("");
     setEditando(false);
   };
 
   return (
     <div>
-      {/* NAVBAR */}
       <nav className="navbar">
         <h2>TechSolutions</h2>
 
@@ -197,11 +187,11 @@ function App() {
         {vista === "home" && (
           <div className="hero">
             <h1>Bienvenido a TechSolutions</h1>
-            <p>Soluciones tecnológicas profesionales</p>
+            <p>Soluciones tecnológicas profesionales para empresas y personas</p>
           </div>
         )}
 
-        {/* LOGIN */}
+        {/* 🔥 LOGIN RESTAURADO */}
         {vista === "login" && (
           <div className="card">
             <h2>Iniciar Sesión</h2>
@@ -209,8 +199,20 @@ function App() {
             {mensajeLogin && <p className="mensaje">{mensajeLogin}</p>}
 
             <form onSubmit={login}>
-              <input type="text" placeholder="Usuario" value={username} onChange={(e) => setUsername(e.target.value)} />
-              <input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <input
+                type="text"
+                placeholder="Usuario"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+
+              <input
+                type="password"
+                placeholder="Contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+
               <button type="submit">Ingresar</button>
             </form>
           </div>
@@ -226,21 +228,47 @@ function App() {
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
               />
+
+              <select
+                value={filtroCategoria}
+                onChange={(e) => setFiltroCategoria(e.target.value)}
+              >
+                <option value="">Todas las categorías</option>
+                {categorias.map(cat => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.nombre}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                className="btn-filtro"
+                onClick={() => {
+                  setBusqueda("");
+                  setFiltroCategoria("");
+                }}
+              >
+                Limpiar
+              </button>
             </div>
 
             <div className="grid-servicios">
               {servicios
-                .filter(s =>
-                  s.nombre.toLowerCase().includes(busqueda.toLowerCase())
-                )
+                .filter(s => {
+                  const coincideNombre = s.nombre
+                    .toLowerCase()
+                    .includes(busqueda.toLowerCase());
+
+                  const coincideCategoria =
+                    !filtroCategoria || String(s.categoriaId) === String(filtroCategoria);
+
+                  return coincideNombre && coincideCategoria;
+                })
                 .map(s => (
                   <div key={s.id} className="servicio-card">
                     <h3>{s.nombre}</h3>
                     <p>{s.descripcion}</p>
                     <span className="precio">S/. {s.precio}</span>
-
-                    {/* 🔥 MOSTRAR CATEGORÍA (si luego haces JOIN) */}
-                    {s.Categoria && <p>{s.Categoria.nombre}</p>}
 
                     {token && (
                       <div className="acciones">
@@ -266,7 +294,6 @@ function App() {
               <input value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Descripción" />
               <input value={precio} onChange={e => setPrecio(e.target.value)} placeholder="Precio" />
 
-              {/* 🔥 SELECT DE CATEGORÍAS */}
               <select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
                 <option value="">Seleccionar categoría</option>
                 {categorias.map(cat => (

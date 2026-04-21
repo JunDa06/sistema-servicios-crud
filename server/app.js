@@ -35,7 +35,7 @@ app.use((req, res) => {
 const PORT = 3000;
 
 // 🔥 Conectar BD + CREAR USUARIO ADMIN
-sequelize.sync()
+sequelize.sync({ alter: true })
   .then(async () => {
     console.log("Base de datos conectada 🟢");
 
