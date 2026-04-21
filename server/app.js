@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 
 const app = express();
 
-// 🔹 MODELO USER
+// 🔹 MODELOS
 const User = require("./models/user.model");
 
 // 🔹 Middlewares
@@ -20,9 +20,11 @@ app.get("/", (req, res) => {
 // 🔹 Rutas
 const serviciosRoutes = require("./routes/servicios.routes");
 const authRoutes = require("./routes/auth.routes");
+const categoriasRoutes = require("./routes/categorias.routes"); // 🔥 NUEVO
 
 app.use("/servicios", serviciosRoutes);
 app.use("/auth", authRoutes);
+app.use("/categorias", categoriasRoutes); // 🔥 NUEVO
 
 // 🔹 Manejo de rutas no encontradas
 app.use((req, res) => {

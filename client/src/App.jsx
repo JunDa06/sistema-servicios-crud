@@ -5,12 +5,15 @@ function App() {
   const [vista, setVista] = useState("home");
 
   const [servicios, setServicios] = useState([]);
+  const [categorias, setCategorias] = useState([]); // 🔥 NUEVO
+
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [precio, setPrecio] = useState("");
+  const [categoriaId, setCategoriaId] = useState(""); // 🔥 NUEVO
+
   const [busqueda, setBusqueda] = useState("");
 
-  // 🔥 MENSAJES SEPARADOS
   const [mensajeForm, setMensajeForm] = useState("");
   const [mensajeLogin, setMensajeLogin] = useState("");
 
@@ -21,21 +24,29 @@ function App() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  // 🔄 CAMBIAR VISTA LIMPIANDO MENSAJES
   const cambiarVista = (v) => {
     setVista(v);
     setMensajeForm("");
     setMensajeLogin("");
   };
 
+  // 🔹 SERVICIOS
   const obtenerServicios = () => {
     fetch("http://localhost:3000/servicios")
       .then(res => res.json())
       .then(data => setServicios(data));
   };
 
+  // 🔹 CATEGORÍAS
+  const obtenerCategorias = () => {
+    fetch("http://localhost:3000/categorias")
+      .then(res => res.json())
+      .then(data => setCategorias(data));
+  };
+
   useEffect(() => {
     obtenerServicios();
+    obtenerCategorias(); // 🔥 NUEVO
   }, []);
 
   // 🔐 LOGIN
@@ -88,7 +99,7 @@ function App() {
         "Content-Type": "application/json",
         Authorization: "Bearer " + token
       },
-      body: JSON.stringify({ nombre, descripcion, precio })
+      body: JSON.stringify({ nombre, descripcion, precio, categoriaId }) // 🔥
     });
 
     const data = await res.json();
@@ -111,6 +122,7 @@ function App() {
     setNombre(s.nombre);
     setDescripcion(s.descripcion);
     setPrecio(s.precio);
+    setCategoriaId(s.categoriaId || ""); // 🔥
   };
 
   const actualizarServicio = async (e) => {
@@ -122,7 +134,7 @@ function App() {
         "Content-Type": "application/json",
         Authorization: "Bearer " + token
       },
-      body: JSON.stringify({ nombre, descripcion, precio })
+      body: JSON.stringify({ nombre, descripcion, precio, categoriaId }) // 🔥
     });
 
     const data = await res.json();
@@ -153,6 +165,7 @@ function App() {
     setNombre("");
     setDescripcion("");
     setPrecio("");
+    setCategoriaId(""); // 🔥
     setEditando(false);
   };
 
@@ -196,20 +209,8 @@ function App() {
             {mensajeLogin && <p className="mensaje">{mensajeLogin}</p>}
 
             <form onSubmit={login}>
-              <input
-                type="text"
-                placeholder="Usuario"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-
-              <input
-                type="password"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-
+              <input type="text" placeholder="Usuario" value={username} onChange={(e) => setUsername(e.target.value)} />
+              <input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} />
               <button type="submit">Ingresar</button>
             </form>
           </div>
@@ -238,6 +239,9 @@ function App() {
                     <p>{s.descripcion}</p>
                     <span className="precio">S/. {s.precio}</span>
 
+                    {/* 🔥 MOSTRAR CATEGORÍA (si luego haces JOIN) */}
+                    {s.Categoria && <p>{s.Categoria.nombre}</p>}
+
                     {token && (
                       <div className="acciones">
                         <button onClick={() => cargarEdicion(s)}>✏️</button>
@@ -261,6 +265,17 @@ function App() {
               <input value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Nombre" />
               <input value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Descripción" />
               <input value={precio} onChange={e => setPrecio(e.target.value)} placeholder="Precio" />
+
+              {/* 🔥 SELECT DE CATEGORÍAS */}
+              <select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
+                <option value="">Seleccionar categoría</option>
+                {categorias.map(cat => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.nombre}
+                  </option>
+                ))}
+              </select>
+
               <button type="submit">{editando ? "Actualizar" : "Guardar"}</button>
             </form>
           </div>
